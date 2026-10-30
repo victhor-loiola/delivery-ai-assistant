@@ -1,0 +1,50 @@
+name: delivery-ai-assistant
+
+services:
+  assistant:
+    image: delivery-ai-assistant:local
+    build: .
+    environment:
+      ASSISTANT_DELIVERY_API_URL: ${ASSISTANT_DELIVERY_API_URL:-http://api-gateway:8080}
+      ASSISTANT_OLLAMA_URL: http://ollama:11434
+      ASSISTANT_OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+      ASSISTANT_REQUEST_TIMEOUT_SECONDS: ${ASSISTANT_REQUEST_TIMEOUT_SECONDS:-60}
+    ports:
+      - "127.0.0.1:${ASSISTANT_PORT:-8090}:8000"
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+    networks:
+      - default
+      - delivery-ai
+
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    ports:
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  ollama-pull:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    command: ["pull", "${OLLAMA_MODEL:-qwen2.5:7b}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  ollama_data:
+
+networks:
+  delivery-ai:
+    external: true
+    name: ai-delivery-platform_default
