@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     host: str = "127.0.0.1"
     port: int = 8000
-    delivery_api_url: str = "https://localhost:8080"
+    delivery_api_url: str = "http://localhost:8080"
     ollama_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:7b"
     request_timeout_seconds: float = 60.0
